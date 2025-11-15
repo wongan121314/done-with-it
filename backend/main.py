@@ -1,11 +1,11 @@
 # backend/main.py
 import os
 import time
+from math import ceil
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-from math import ceil
-from db import get_connection
+from db import get_connection  # your existing db helper (mysql-connector)
 
 app = Flask(__name__)
 CORS(app)
@@ -14,19 +14,25 @@ CORS(app)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
-    return send_from_directory("uploads", filename)
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 # ---------------- SELLER ROUTES ----------------
 @app.route("/api/register", methods=["POST"])
 def register():
-    data = request.json
+    data = request.json or {}
     name = data.get("name")
     email = data.get("email")
     password = data.get("password")
+    phone = data.get("phone", "")
+    location = data.get("location", "")
+    address = data.get("address", "")
+
+    if not (name and email and password):
+        return jsonify({"message": "name, email and password are required"}), 400
+
     hashed_pw = generate_password_hash(password)
 
     conn = get_connection()
@@ -39,69 +45,92 @@ def register():
         return jsonify({"message": "Email already exists"}), 400
 
     cursor.execute(
-        "INSERT INTO sellers (name, email, password) VALUES (%s, %s, %s)",
-        (name, email, hashed_pw)
+        """
+        INSERT INTO sellers (name, email, password, phone, location, address)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """,
+        (name, email, hashed_pw, phone, location, address)
     )
     conn.commit()
+
+    # Return created seller (without password)
+    cursor.execute("SELECT id, name, email, phone, location, address FROM sellers WHERE email=%s", (email,))
+    seller = cursor.fetchone()
+
     cursor.close()
     conn.close()
-    return jsonify({"message": "Seller registered successfully"}), 201
+    return jsonify(seller), 201
 
 
 @app.route("/api/login", methods=["POST"])
 def login():
-    data = request.json
+    data = request.json or {}
     email = data.get("email")
     password = data.get("password")
+
+    if not (email and password):
+        return jsonify({"message": "email and password required"}), 400
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM sellers WHERE email=%s", (email,))
     seller = cursor.fetchone()
-    cursor.close()
-    conn.close()
+    if not seller:
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "User not found"}), 404
 
-    if not seller or not check_password_hash(seller["password"], password):
+    if not check_password_hash(seller["password"], password):
+        cursor.close()
+        conn.close()
         return jsonify({"message": "Invalid credentials"}), 401
 
-    return jsonify({"id": seller["id"], "name": seller["name"], "email": seller["email"]})
+    # remove password before returning
+    seller.pop("password", None)
+    cursor.close()
+    conn.close()
+    return jsonify(seller), 200
 
 
-# ---------------- ITEM ROUTES ----------------
 # ---------------- ITEM ROUTES ----------------
 @app.route("/api/items", methods=["GET"])
 def get_items():
+    # supports optional seller_id, category, sort, page, per_page, search
     category = request.args.get("category", "All")
     sort_order = request.args.get("sort", "asc")
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
     search = request.args.get("search", "").strip()
-    seller_id = request.args.get("seller_id")  # new optional param
+    seller_id = request.args.get("seller_id")
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Build query
-    query = "SELECT * FROM items WHERE 1=1"
+    # select items joined with seller contact fields
+    query = """
+        SELECT items.*, sellers.name AS seller_name, sellers.email AS seller_email,
+               sellers.phone AS seller_phone, sellers.location AS seller_location,
+               sellers.address AS seller_address
+        FROM items
+        LEFT JOIN sellers ON items.seller_id = sellers.id
+        WHERE 1=1
+    """
     params = []
 
-    # Filter by seller if seller_id is provided
     if seller_id:
-        query += " AND seller_id = %s"
+        query += " AND items.seller_id = %s"
         params.append(seller_id)
 
     if category != "All":
-        query += " AND category = %s"
+        query += " AND items.category = %s"
         params.append(category)
 
     if search:
-        query += " AND title LIKE %s"
+        query += " AND items.title LIKE %s"
         params.append(f"%{search}%")
 
-    # Sorting
-    query += " ORDER BY price " + ("ASC" if sort_order == "asc" else "DESC")
+    query += " ORDER BY items.price " + ("ASC" if sort_order == "asc" else "DESC")
 
-    # Pagination
     offset = (page - 1) * per_page
     query += " LIMIT %s OFFSET %s"
     params.extend([per_page, offset])
@@ -109,18 +138,23 @@ def get_items():
     cursor.execute(query, params)
     items = cursor.fetchall()
 
-    # Total count for pagination
+    # attach seller fields into item keys for convenience
+    for it in items:
+        it["seller_name"] = it.get("seller_name")
+        it["seller_email"] = it.get("seller_email")
+        it["seller_phone"] = it.get("seller_phone")
+        it["seller_location"] = it.get("seller_location")
+        it["seller_address"] = it.get("seller_address")
+
+    # total count
     count_query = "SELECT COUNT(*) as total FROM items WHERE 1=1"
     count_params = []
-
     if seller_id:
         count_query += " AND seller_id = %s"
         count_params.append(seller_id)
-
     if category != "All":
         count_query += " AND category = %s"
         count_params.append(category)
-
     if search:
         count_query += " AND title LIKE %s"
         count_params.append(f"%{search}%")
@@ -140,16 +174,19 @@ def get_items():
     })
 
 
-
 @app.route("/api/items", methods=["POST"])
 def add_item():
+    # expects multipart/form-data for image
     seller_id = request.form.get("seller_id")
     title = request.form.get("title")
     price = request.form.get("price")
     status = request.form.get("status")
     category = request.form.get("category")
+    contact = request.form.get("contact")  # optional seller contact from frontend
+    email = request.form.get("email")
+    address = request.form.get("address")
+    location = request.form.get("location")
 
-    # Handle image
     image = request.files.get("image")
     filename = None
     if image:
@@ -160,12 +197,12 @@ def add_item():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
-        INSERT INTO items (title, price, status, category, image, seller_id)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (title, price, status, category, filename, seller_id))
+        INSERT INTO items (title, price, status, category, image, contact, email, address, seller_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (title, price, status, category, filename, contact, email, address, seller_id))
     conn.commit()
 
-    cursor.execute("SELECT * FROM items WHERE id = LAST_INSERT_ID()")
+    cursor.execute("SELECT items.*, sellers.name AS seller_name, sellers.email AS seller_email, sellers.phone AS seller_phone, sellers.location AS seller_location, sellers.address AS seller_address FROM items LEFT JOIN sellers ON items.seller_id = sellers.id WHERE items.id = LAST_INSERT_ID()")
     new_item = cursor.fetchone()
 
     cursor.close()
@@ -175,14 +212,17 @@ def add_item():
 
 @app.route("/api/items/<int:item_id>", methods=["PUT"])
 def update_item(item_id):
-    # Use multipart/form-data if updating image
+    # expects multipart/form-data if updating image
     seller_id = request.form.get("seller_id")
     title = request.form.get("title")
     price = request.form.get("price")
     status = request.form.get("status")
     category = request.form.get("category")
+    contact = request.form.get("contact")
+    email = request.form.get("email")
+    address = request.form.get("address")
+    location = request.form.get("location")
 
-    # Handle image
     image = request.files.get("image")
     filename = None
     if image:
@@ -193,27 +233,26 @@ def update_item(item_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Only update image if provided
     if filename:
         cursor.execute("""
             UPDATE items
-            SET title=%s, price=%s, status=%s, category=%s, image=%s
+            SET title=%s, price=%s, status=%s, category=%s, image=%s, contact=%s, email=%s, address=%s
             WHERE id=%s
-        """, (title, price, status, category, filename, item_id))
+        """, (title, price, status, category, filename, contact, email, address, item_id))
     else:
         cursor.execute("""
             UPDATE items
-            SET title=%s, price=%s, status=%s, category=%s
+            SET title=%s, price=%s, status=%s, category=%s, contact=%s, email=%s, address=%s
             WHERE id=%s
-        """, (title, price, status, category, item_id))
+        """, (title, price, status, category, contact, email, address, item_id))
 
     conn.commit()
-    cursor.execute("SELECT * FROM items WHERE id=%s", (item_id,))
+    cursor.execute("SELECT items.*, sellers.name AS seller_name, sellers.email AS seller_email, sellers.phone AS seller_phone, sellers.location AS seller_location, sellers.address AS seller_address FROM items LEFT JOIN sellers ON items.seller_id = sellers.id WHERE items.id = %s", (item_id,))
     updated_item = cursor.fetchone()
 
     cursor.close()
     conn.close()
-    return jsonify({"message": "Item updated", "item": updated_item})
+    return jsonify({"message": "Item updated", "item": updated_item}), 200
 
 
 if __name__ == "__main__":
