@@ -12,7 +12,7 @@ export default function SellForm({ seller }) {
   const [address, setAddress] = useState("");
 
   const handleAddItem = async () => {
-    const res = await fetch("http://<server-ip>:5000/api/items", {
+    const res = await fetch("http://localhost:5000/api/items", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

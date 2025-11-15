@@ -9,7 +9,7 @@ export default function Register({ switchToLogin, onRegister }) {
   const [error, setError] = useState("");
 
   const handleRegister = async () => {
-    const res = await fetch("http://<server-ip>:5000/api/register", {
+    const res = await fetch("http://localhost:5000/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
