@@ -146,6 +146,32 @@ def add_item():
     conn.close()
     return jsonify({"message": "Item added"}), 201
 
+@app.route("/api/items/<int:item_id>", methods=["PUT"])
+def update_item(item_id):
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE items
+        SET title=%s, price=%s, status=%s, category=%s, image=%s, contact=%s, email=%s, address=%s
+        WHERE id=%s
+    """, (
+        data.get("title"),
+        data.get("price"),
+        data.get("status"),
+        data.get("category"),
+        data.get("image"),
+        data.get("contact"),
+        data.get("email"),
+        data.get("address"),
+        item_id
+    ))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"message": "Item updated", "item": data})
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

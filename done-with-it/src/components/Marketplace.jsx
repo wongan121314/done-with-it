@@ -23,8 +23,8 @@ export default function Marketplace() {
           `${BACKEND_URL}/api/items?category=${categoryFilter}&sort=${sortOrder}&page=${currentPage}&per_page=${ITEMS_PER_PAGE}&search=${encodeURIComponent(searchQuery)}`
         );
         const data = await res.json();
-        setItems(data.items);
-        setTotalPages(data.total_pages);
+        setItems(data.items || []);
+        setTotalPages(data.total_pages || 1);
 
         // Set categories dynamically
         if (data.items.length > 0) {
@@ -48,7 +48,7 @@ export default function Marketplace() {
   return (
     <div>
       {/* Filters */}
-      <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+      <div style={styles.filtersContainer}>
         <input
           type="text"
           placeholder="Search by title..."
@@ -57,20 +57,29 @@ export default function Marketplace() {
             setSearchQuery(e.target.value);
             setCurrentPage(1);
           }}
+          style={styles.input}
         />
-        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          style={styles.select}
+        >
           {allCategories.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
-        <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          style={styles.select}
+        >
           <option value="asc">Price: Low → High</option>
           <option value="desc">Price: High → Low</option>
         </select>
       </div>
 
       {/* Item cards */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+      <div style={styles.itemsContainer}>
         {items.map((item) => (
           <ItemCard key={item.id} item={item} />
         ))}
@@ -78,7 +87,7 @@ export default function Marketplace() {
       </div>
 
       {/* Pagination */}
-      <div style={{ marginTop: "16px", textAlign: "center" }}>
+      <div style={styles.pagination}>
         <button onClick={handlePrev} disabled={currentPage === 1}>Prev</button>
         <span style={{ margin: "0 12px" }}>Page {currentPage} of {totalPages}</span>
         <button onClick={handleNext} disabled={currentPage === totalPages}>Next</button>
@@ -86,3 +95,36 @@ export default function Marketplace() {
     </div>
   );
 }
+
+const styles = {
+  filtersContainer: {
+    display: "flex",
+    flexWrap: "wrap", // wrap on small screens
+    gap: "12px",
+    marginBottom: "16px",
+  },
+  input: {
+    flex: "1 1 200px", // grow/shrink, min width 200px
+    padding: "8px",
+    fontSize: "1rem",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+  },
+  select: {
+    flex: "1 1 150px", // grow/shrink, min width 150px
+    padding: "8px",
+    fontSize: "1rem",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+  },
+  itemsContainer: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "16px",
+    justifyContent: "center", // center on smaller screens
+  },
+  pagination: {
+    marginTop: "16px",
+    textAlign: "center",
+  },
+};

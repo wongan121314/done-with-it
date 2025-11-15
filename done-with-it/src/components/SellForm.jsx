@@ -1,43 +1,60 @@
 // src/components/SellForm.jsx
 import React, { useState } from "react";
 
-export default function SellForm({ seller }) {
-  const [title, setTitle] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState("");
-  const [status, setStatus] = useState("Available");
-  const [image, setImage] = useState("");
-  const [contact, setContact] = useState("");
-  const [email, setEmail] = useState(seller.email);
-  const [address, setAddress] = useState("");
+const BACKEND_URL = "http://localhost:5000";
 
-  const handleAddItem = async () => {
-    const res = await fetch("http://localhost:5000/api/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title, price, category, status, image, contact, email, address, seller_id: seller.id
-      }),
-    });
-    if (res.ok) {
-      alert("Item added!");
-      setTitle(""); setPrice(""); setCategory(""); setImage(""); setContact(""); setAddress("");
-    } else {
-      alert("Error adding item");
+export default function SellForm({ item = null, sellerId, onSave, onClose }) {
+  const [title, setTitle] = useState(item?.title || "");
+  const [price, setPrice] = useState(item?.price || "");
+  const [status, setStatus] = useState(item?.status || "Available");
+  const [category, setCategory] = useState(item?.category || "");
+  const [image, setImage] = useState(item?.image || "");
+  const [contact, setContact] = useState(item?.contact || "");
+  const [email, setEmail] = useState(item?.email || "");
+  const [address, setAddress] = useState(item?.address || "");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const payload = { title, price, status, category, image, contact, email, address, seller_id: sellerId };
+
+    const url = item ? `${BACKEND_URL}/api/items/${item.id}` : `${BACKEND_URL}/api/items`;
+    const method = item ? "PUT" : "POST";
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        onSave && onSave({ ...payload, id: item?.id });
+      } else {
+        alert(data.message || "Error saving item");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error saving item");
     }
   };
 
   return (
-    <div style={{ maxWidth: "500px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-      <h2>Add New Item</h2>
-      <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
-      <input placeholder="Price" value={price} onChange={e => setPrice(e.target.value)} />
-      <input placeholder="Category" value={category} onChange={e => setCategory(e.target.value)} />
-      <input placeholder="Status" value={status} onChange={e => setStatus(e.target.value)} />
-      <input placeholder="Image URL" value={image} onChange={e => setImage(e.target.value)} />
-      <input placeholder="Contact" value={contact} onChange={e => setContact(e.target.value)} />
-      <input placeholder="Address" value={address} onChange={e => setAddress(e.target.value)} />
-      <button onClick={handleAddItem}>Add Item</button>
-    </div>
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "400px" }}>
+      <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      <input type="number" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} required />
+      <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        <option>Available</option>
+        <option>Sold</option>
+      </select>
+      <input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
+      <input placeholder="Image URL" value={image} onChange={(e) => setImage(e.target.value)} />
+      <input placeholder="Contact" value={contact} onChange={(e) => setContact(e.target.value)} />
+      <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
+      <div style={{ display: "flex", gap: "10px" }}>
+        <button type="submit">{item ? "Update Item" : "Add Item"}</button>
+        {onClose && <button type="button" onClick={onClose}>Cancel</button>}
+      </div>
+    </form>
   );
 }
