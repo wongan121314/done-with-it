@@ -68,6 +68,7 @@ def login():
 
 
 # ---------------- ITEM ROUTES ----------------
+# ---------------- ITEM ROUTES ----------------
 @app.route("/api/items", methods=["GET"])
 def get_items():
     category = request.args.get("category", "All")
@@ -75,6 +76,7 @@ def get_items():
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
     search = request.args.get("search", "").strip()
+    seller_id = request.args.get("seller_id")  # new optional param
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -82,6 +84,11 @@ def get_items():
     # Build query
     query = "SELECT * FROM items WHERE 1=1"
     params = []
+
+    # Filter by seller if seller_id is provided
+    if seller_id:
+        query += " AND seller_id = %s"
+        params.append(seller_id)
 
     if category != "All":
         query += " AND category = %s"
@@ -91,8 +98,10 @@ def get_items():
         query += " AND title LIKE %s"
         params.append(f"%{search}%")
 
+    # Sorting
     query += " ORDER BY price " + ("ASC" if sort_order == "asc" else "DESC")
 
+    # Pagination
     offset = (page - 1) * per_page
     query += " LIMIT %s OFFSET %s"
     params.extend([per_page, offset])
@@ -103,9 +112,15 @@ def get_items():
     # Total count for pagination
     count_query = "SELECT COUNT(*) as total FROM items WHERE 1=1"
     count_params = []
+
+    if seller_id:
+        count_query += " AND seller_id = %s"
+        count_params.append(seller_id)
+
     if category != "All":
         count_query += " AND category = %s"
         count_params.append(category)
+
     if search:
         count_query += " AND title LIKE %s"
         count_params.append(f"%{search}%")
@@ -123,6 +138,7 @@ def get_items():
         "per_page": per_page,
         "total_pages": ceil(total / per_page)
     })
+
 
 
 @app.route("/api/items", methods=["POST"])

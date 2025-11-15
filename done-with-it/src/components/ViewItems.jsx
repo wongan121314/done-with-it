@@ -1,57 +1,34 @@
-// src/components/ViewItems.jsx
-import React, { useEffect, useState } from "react";
+import React from "react";
+import Icons from "../resources/icons";
 
 const BACKEND_URL = "http://localhost:5000";
 
-export default function ViewItems({ sellerId, onEdit }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch seller's items
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/items?seller_id=${sellerId}`);
-        const data = await res.json();
-        setItems(data.items || []);
-      } catch (err) {
-        console.error("Error fetching items:", err);
-      }
-      setLoading(false);
-    };
-    fetchItems();
-  }, [sellerId]);
-
-  if (loading) return <p>Loading your items...</p>;
-
+export default function ViewItems({ items }) {
   return (
-    <div>
-      {items.length === 0 && <p>You have not listed any items yet.</p>}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-        {items.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: "12px",
-              borderRadius: "8px",
-              width: "200px",
-            }}
-          >
-            <img
-              src={item.image}
-              alt={item.title}
-              style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "6px" }}
-            />
-            <h4>{item.title}</h4>
-            <p>Price: ${item.price}</p>
-            <p>Status: {item.status}</p>
-            <p>Category: {item.category}</p>
-            <button onClick={() => onEdit(item)}>Edit</button>
+    <div style={styles.container}>
+      {items.map(item => {
+        const imageUrl = item.image ? `${BACKEND_URL}/uploads/${item.image}` : "https://picsum.photos/200";
+        return (
+          <div key={item.id} style={styles.card}>
+            <img src={imageUrl} alt={item.title} style={styles.image} />
+            <h3 style={styles.row}><Icons.item style={styles.icon} /> {item.title}</h3>
+            <p style={styles.row}><Icons.price style={styles.icon} /> ${item.price}</p>
+            <p style={styles.row}><Icons.item style={styles.icon} /> {item.category}</p>
+            <p style={styles.row}>{item.status}</p>
+            {item.contact && <p style={styles.row}><Icons.phone style={styles.icon} /> {item.contact}</p>}
+            {item.email && <p style={styles.row}><Icons.email style={styles.icon} /> {item.email}</p>}
+            {item.address && <p style={styles.row}><Icons.location style={styles.icon} /> {item.address}</p>}
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
+
+const styles = {
+  container: { display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" },
+  card: { width: "220px", border: "1px solid #ccc", borderRadius: "8px", overflow: "hidden", padding: "8px", display: "flex", flexDirection: "column", gap: "6px", backgroundColor: "#fff" },
+  image: { width: "100%", height: "150px", objectFit: "cover", borderRadius: "6px" },
+  row: { display: "flex", alignItems: "center", gap: "6px", fontSize: "0.9rem" },
+  icon: { color: "#4CAF50" },
+};

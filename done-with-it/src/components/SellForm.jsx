@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Icons from "../resources/icons";
 
 export default function SellForm({ seller, onNewItem }) {
   const [title, setTitle] = useState("");
@@ -6,13 +7,13 @@ export default function SellForm({ seller, onNewItem }) {
   const [status, setStatus] = useState("Available");
   const [category, setCategory] = useState("");
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null); // For preview
+  const [imagePreview, setImagePreview] = useState(null);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file)); // Preview
+      setImagePreview(URL.createObjectURL(file));
     } else {
       setImageFile(null);
       setImagePreview(null);
@@ -36,68 +37,43 @@ export default function SellForm({ seller, onNewItem }) {
 
     if (res.ok) {
       const newItem = await res.json();
-      onNewItem(newItem); // Update marketplace instantly
-
-      // Reset form and preview
-      setTitle("");
-      setPrice("");
-      setCategory("");
-      setStatus("Available");
-      setImageFile(null);
-      setImagePreview(null);
+      onNewItem(newItem);
+      setTitle(""); setPrice(""); setCategory(""); setStatus("Available");
+      setImageFile(null); setImagePreview(null);
     } else {
       alert("Error adding item.");
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-        maxWidth: "400px",
-        margin: "0 auto",
-      }}
-    >
-      <input
-        type="text"
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-      />
-      <input
-        type="number"
-        placeholder="Price"
-        value={price}
-        onChange={(e) => setPrice(e.target.value)}
-        required
-      />
-      <input
-        type="text"
-        placeholder="Category"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        required
-      />
-      <select value={status} onChange={(e) => setStatus(e.target.value)}>
-        <option value="Available">Available</option>
-        <option value="Sold">Sold</option>
-      </select>
-      <input type="file" accept="image/*" onChange={handleImageChange} />
-
-      {/* Image preview */}
-      {imagePreview && (
-        <img
-          src={imagePreview}
-          alt="Preview"
-          style={{ width: "100%", maxHeight: "200px", objectFit: "cover", borderRadius: "8px" }}
-        />
-      )}
-
+    <form onSubmit={handleSubmit} style={styles.form}>
+      <label style={styles.label}><Icons.item style={styles.icon} /> Title
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      </label>
+      <label style={styles.label}><Icons.price style={styles.icon} /> Price
+        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required />
+      </label>
+      <label style={styles.label}><Icons.item style={styles.icon} /> Category
+        <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required />
+      </label>
+      <label style={styles.label}>Status
+        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="Available">Available</option>
+          <option value="Sold">Sold</option>
+        </select>
+      </label>
+      <label style={styles.label}>Image
+        <input type="file" accept="image/*" onChange={handleImageChange} />
+      </label>
+      {imagePreview && <img src={imagePreview} alt="Preview" style={styles.preview} />}
       <button type="submit">Add Item</button>
     </form>
   );
 }
+
+const styles = {
+  form: { display: "flex", flexDirection: "column", gap: "12px", maxWidth: "400px", margin: "0 auto" },
+  label: { display: "flex", alignItems: "center", gap: "6px", fontSize: "0.9rem" },
+  icon: { color: "#4CAF50" },
+  preview: { width: "100%", maxHeight: "200px", objectFit: "cover", borderRadius: "8px" },
+};

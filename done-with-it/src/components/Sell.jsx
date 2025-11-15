@@ -3,18 +3,12 @@ import React, { useState } from "react";
 import Login from "./Login";
 import Register from "./Register";
 import SellForm from "./SellForm";
-import Marketplace from "./Marketplace";
-import ViewItems from "./ViewItems"
+import ViewItems from "./ViewItems";
 
 export default function Sell() {
   const [showRegister, setShowRegister] = useState(false);
   const [loggedInSeller, setLoggedInSeller] = useState(null);
-  const [newItems, setNewItems] = useState([]);
-
-  // Called by SellForm to add a new item
-  const handleNewItem = (item) => {
-    setNewItems((prev) => [item, ...prev]);
-  };
+  const [view, setView] = useState("viewItems"); // "viewItems" or "sellForm"
 
   if (!loggedInSeller) {
     return !showRegister ? (
@@ -31,11 +25,33 @@ export default function Sell() {
   }
 
   return (
-    <div>
-      {/* Sell Form */}
-      <SellForm seller={loggedInSeller} onNewItem={handleNewItem} />
+    <div style={{ padding: "16px" }}>
+      {/* Buttons to switch views */}
+      <div style={{ marginBottom: "16px", display: "flex", gap: "12px" }}>
+        <button
+          onClick={() => setView("viewItems")}
+          disabled={view === "viewItems"}
+        >
+          My Items
+        </button>
+        <button
+          onClick={() => setView("sellForm")}
+          disabled={view === "sellForm"}
+        >
+          Add Item
+        </button>
+      </div>
 
- 
+      {/* Conditional rendering */}
+      {view === "viewItems" && (
+        <ViewItems seller={loggedInSeller} />
+      )}
+      {view === "sellForm" && (
+        <SellForm
+          seller={loggedInSeller}
+          onNewItem={() => setView("viewItems")} // go back to view after adding
+        />
+      )}
     </div>
   );
 }
