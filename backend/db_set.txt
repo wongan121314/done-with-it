@@ -1,0 +1,32 @@
+-- Use your database
+CREATE DATABASE IF NOT EXISTS done_with_it;
+USE done_with_it;
+
+-- ---------------- SELLERS ----------------
+CREATE TABLE IF NOT EXISTS sellers (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    location VARCHAR(255),
+    address VARCHAR(255),
+    PRIMARY KEY (id)
+);
+
+-- ---------------- ITEMS ----------------
+CREATE TABLE IF NOT EXISTS items (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    price FLOAT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Available',
+    category VARCHAR(50),
+    image VARCHAR(255),
+    contact VARCHAR(50),
+    email VARCHAR(100),
+    address VARCHAR(255),
+    seller_id INT(11),
+    PRIMARY KEY (id),
+    KEY seller_id_idx (seller_id),
+    CONSTRAINT fk_seller FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL
+);

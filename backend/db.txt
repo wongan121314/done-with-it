@@ -1,0 +1,158 @@
+MariaDB [done_with_it]> \P db.txt
+PAGER set to 'db.txt'
+MariaDB [done_with_it]> show databases;show tables;describe items;describe sellers;
++--------------------+
+| Database           |
++--------------------+
+| done_with_it       |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| test               |
+| users              |
++--------------------+
+7 rows in set (0.010 sec)
+
++------------------------+
+| Tables_in_done_with_it |
++------------------------+
+| items                  |
+| sellers                |
++------------------------+
+2 rows in set (0.001 sec)
+
++-----------+--------------+------+-----+-----------+----------------+
+| Field     | Type         | Null | Key | Default   | Extra          |
++-----------+--------------+------+-----+-----------+----------------+
+| id        | int(11)      | NO   | PRI | NULL      | auto_increment |
+| title     | varchar(255) | NO   |     | NULL      |                |
+| price     | float        | NO   |     | NULL      |                |
+| status    | varchar(50)  | YES  |     | Available |                |
+| category  | varchar(50)  | YES  |     | NULL      |                |
+| image     | varchar(255) | YES  |     | NULL      |                |
+| contact   | varchar(50)  | YES  |     | NULL      |                |
+| email     | varchar(100) | YES  |     | NULL      |                |
+| address   | varchar(255) | YES  |     | NULL      |                |
+| seller_id | int(11)      | YES  | MUL | NULL      |                |
++-----------+--------------+------+-----+-----------+----------------+
+10 rows in set (0.005 sec)
+
++----------+--------------+------+-----+---------+----------------+
+| Field    | Type         | Null | Key | Default | Extra          |
++----------+--------------+------+-----+---------+----------------+
+| id       | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name     | varchar(100) | NO   |     | NULL    |                |
+| email    | varchar(100) | NO   | UNI | NULL    |                |
+| password | varchar(255) | NO   |     | NULL    |                |
+| phone    | varchar(50)  | YES  |     | NULL    |                |
+| location | varchar(255) | YES  |     | NULL    |                |
+| address  | varchar(255) | YES  |     | NULL    |                |
++----------+--------------+------+-----+---------+----------------+
+7 rows in set (0.004 sec)
+
+MariaDB [done_with_it]> show databases;show tables;describe items;describe sellers;
++--------------------+
+| Database           |
++--------------------+
+| done_with_it       |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| test               |
+| users              |
++--------------------+
+7 rows in set (0.002 sec)
+
++------------------------+
+| Tables_in_done_with_it |
++------------------------+
+| items                  |
+| sellers                |
++------------------------+
+2 rows in set (0.001 sec)
+
++-----------+--------------+------+-----+-----------+----------------+
+| Field     | Type         | Null | Key | Default   | Extra          |
++-----------+--------------+------+-----+-----------+----------------+
+| id        | int(11)      | NO   | PRI | NULL      | auto_increment |
+| title     | varchar(255) | NO   |     | NULL      |                |
+| price     | float        | NO   |     | NULL      |                |
+| status    | varchar(50)  | YES  |     | Available |                |
+| category  | varchar(50)  | YES  |     | NULL      |                |
+| image     | varchar(255) | YES  |     | NULL      |                |
+| contact   | varchar(50)  | YES  |     | NULL      |                |
+| email     | varchar(100) | YES  |     | NULL      |                |
+| address   | varchar(255) | YES  |     | NULL      |                |
+| seller_id | int(11)      | YES  | MUL | NULL      |                |
++-----------+--------------+------+-----+-----------+----------------+
+10 rows in set (0.003 sec)
+
++----------+--------------+------+-----+---------+----------------+
+| Field    | Type         | Null | Key | Default | Extra          |
++----------+--------------+------+-----+---------+----------------+
+| id       | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name     | varchar(100) | NO   |     | NULL    |                |
+| email    | varchar(100) | NO   | UNI | NULL    |                |
+| password | varchar(255) | NO   |     | NULL    |                |
+| phone    | varchar(50)  | YES  |     | NULL    |                |
+| location | varchar(255) | YES  |     | NULL    |                |
+| address  | varchar(255) | YES  |     | NULL    |                |
++----------+--------------+------+-----+---------+----------------+
+7 rows in set (0.003 sec)
+
+MariaDB [done_with_it]> \P
+Default pager wasn't set, using stdout.
+MariaDB [done_with_it]> show databases;show tables;describe items;describe sellers;
++--------------------+
+| Database           |
++--------------------+
+| done_with_it       |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
+| test               |
+| users              |
++--------------------+
+7 rows in set (0.001 sec)
+
++------------------------+
+| Tables_in_done_with_it |
++------------------------+
+| items                  |
+| sellers                |
++------------------------+
+2 rows in set (0.001 sec)
+
++-----------+--------------+------+-----+-----------+----------------+
+| Field     | Type         | Null | Key | Default   | Extra          |
++-----------+--------------+------+-----+-----------+----------------+
+| id        | int(11)      | NO   | PRI | NULL      | auto_increment |
+| title     | varchar(255) | NO   |     | NULL      |                |
+| price     | float        | NO   |     | NULL      |                |
+| status    | varchar(50)  | YES  |     | Available |                |
+| category  | varchar(50)  | YES  |     | NULL      |                |
+| image     | varchar(255) | YES  |     | NULL      |                |
+| contact   | varchar(50)  | YES  |     | NULL      |                |
+| email     | varchar(100) | YES  |     | NULL      |                |
+| address   | varchar(255) | YES  |     | NULL      |                |
+| seller_id | int(11)      | YES  | MUL | NULL      |                |
++-----------+--------------+------+-----+-----------+----------------+
+10 rows in set (0.003 sec)
+
++----------+--------------+------+-----+---------+----------------+
+| Field    | Type         | Null | Key | Default | Extra          |
++----------+--------------+------+-----+---------+----------------+
+| id       | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name     | varchar(100) | NO   |     | NULL    |                |
+| email    | varchar(100) | NO   | UNI | NULL    |                |
+| password | varchar(255) | NO   |     | NULL    |                |
+| phone    | varchar(50)  | YES  |     | NULL    |                |
+| location | varchar(255) | YES  |     | NULL    |                |
+| address  | varchar(255) | YES  |     | NULL    |                |
++----------+--------------+------+-----+---------+----------------+
+7 rows in set (0.003 sec)
+
+MariaDB [done_with_it]> \q
