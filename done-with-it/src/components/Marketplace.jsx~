@@ -1,0 +1,186 @@
+
+// src/components/Marketplace.jsx
+import React, { useState } from "react";
+import ItemCard from "./ItemCard";
+
+// <-- Put allItems array here
+const allItems = [
+  {
+    title: "Old Laptop",
+    price: 120,
+    status: "Available",
+    category: "Electronics",
+    image: "https://via.placeholder.com/500",
+    contact: "+1234567890",
+    email: "seller1@example.com",
+    address: "123 Main Street, City",
+  },
+  {
+    title: "Samsung Phone",
+    price: 80,
+    status: "Sold",
+    category: "Electronics",
+    image: "https://via.placeholder.com/500",
+    contact: "+0987654321",
+    email: "seller2@example.com",
+    address: "456 Second Ave, Town",
+  },
+  {
+    title: "Used Bicycle",
+    price: 45,
+    status: "Available",
+    category: "Vehicles",
+    image: "https://via.placeholder.com/500",
+    contact: "+1122334455",
+    email: "seller3@example.com",
+    address: "789 Third Blvd, Village",
+  },
+  {
+    title: "Wooden Chair",
+    price: 35,
+    status: "Available",
+    category: "Furniture",
+    image: "https://via.placeholder.com/500",
+    contact: "+5566778899",
+    email: "seller4@example.com",
+    address: "101 Fourth Street, Town",
+  },
+];
+
+// Rest of Marketplace.jsx code...
+
+
+export default function Marketplace() {
+  const itemsPerPage = 6;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [sortOrder, setSortOrder] = useState("None");
+
+  // Filter items based on search, status, category
+  let filteredItems = allItems.filter((item) => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "All" || item.status === statusFilter;
+    const matchesCategory = categoryFilter === "All" || item.category === categoryFilter;
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
+
+  // Sort items
+  if (sortOrder === "PriceLowHigh") {
+    filteredItems.sort((a, b) => a.price - b.price);
+  } else if (sortOrder === "PriceHighLow") {
+    filteredItems.sort((a, b) => b.price - a.price);
+  }
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+  const renderCards = () => currentItems.map((item, index) => (
+    <ItemCard key={index} item={item} />
+  ));
+
+  return (
+    <div>
+      {/* Controls */}
+      <div style={styles.controls}>
+        <input
+          type="text"
+          placeholder="Search items..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+          style={styles.searchInput}
+        />
+
+        <select
+          value={statusFilter}
+          onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+          style={styles.select}
+        >
+          <option value="All">All Status</option>
+          <option value="Available">Available</option>
+          <option value="Sold">Sold</option>
+        </select>
+
+        <select
+          value={categoryFilter}
+          onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1); }}
+          style={styles.select}
+        >
+          <option value="All">All Categories</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Furniture">Furniture</option>
+          <option value="Vehicles">Vehicles</option>
+        </select>
+
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          style={styles.select}
+        >
+          <option value="None">Sort By</option>
+          <option value="PriceLowHigh">Price Low → High</option>
+          <option value="PriceHighLow">Price High → Low</option>
+        </select>
+      </div>
+
+      {/* Item Cards */}
+      <div style={styles.grid}>{renderCards()}</div>
+
+      {/* Pagination */}
+      <div style={styles.pagination}>
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Prev
+        </button>
+        <span>{currentPage} / {totalPages}</span>
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  controls: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "10px",
+    marginBottom: "20px",
+    flexWrap: "wrap",
+  },
+  searchInput: {
+    padding: "8px 12px",
+    fontSize: "1rem",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    minWidth: "150px",
+  },
+  select: {
+    padding: "8px 12px",
+    fontSize: "1rem",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+  },
+  grid: {
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: "20px",
+  },
+  pagination: {
+    marginTop: "20px",
+    display: "flex",
+    justifyContent: "center",
+    gap: "15px",
+    alignItems: "center",
+  },
+};

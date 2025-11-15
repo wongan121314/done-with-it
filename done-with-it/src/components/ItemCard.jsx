@@ -1,0 +1,116 @@
+import Colors from "../resources/colors";
+import Icons from "../resources/icons";
+
+export default function ItemCard({ item }) {
+  const statusColor =
+    item.status === "Available" ? Colors.primary : Colors.danger;
+
+  const PriceIcon = Icons.price;
+  const PhoneIcon = Icons.phone;
+  const EmailIcon = Icons.email;
+  const LocationIcon = Icons.location;
+
+  return (
+    <div style={styles.card}>
+      <img src={item.image} style={styles.image} />
+
+      <div style={styles.body}>
+        <h3 style={styles.title}>{item.title}</h3>
+
+        <div style={styles.priceRow}>
+          <PriceIcon style={styles.icon} />
+          <span style={styles.price}>${item.price}</span>
+        </div>
+
+        <span
+          style={{
+            ...styles.status,
+            backgroundColor: statusColor,
+          }}
+        >
+          {item.status}
+        </span>
+
+        <p style={styles.contact}>
+          <PhoneIcon style={styles.iconSmall} /> {item.contact}
+        </p>
+        <p style={styles.contact}>
+          <EmailIcon style={styles.iconSmall} /> {item.email}
+        </p>
+        <p style={styles.contact}>
+          <LocationIcon style={styles.iconSmall} /> {item.address}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------- Styles ---------------------- */
+const styles = {
+  card: {
+    width: "92%",
+    maxWidth: "400px",
+    margin: "12px auto",
+    backgroundColor: Colors.white,
+    borderRadius: "12px",
+    overflow: "hidden",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+    border: `1px solid ${Colors.gray}`,
+   },
+
+  image: {
+    width: "100%",
+    height: "200px",
+    objectFit: "cover",
+  },
+
+  body: {
+    padding: "16px",
+  },
+
+  title: {
+    margin: 0,
+    fontSize: "1.3rem",
+    fontWeight: "bold",
+    color: Colors.textDark,
+  },
+
+  priceRow: {
+    display: "flex",
+    alignItems: "center",
+    marginTop: "8px",
+  },
+
+  icon: {
+    marginRight: "8px",
+    color: Colors.secondary,
+  },
+
+  price: {
+    fontSize: "1.2rem",
+    fontWeight: "bold",
+    color: Colors.secondary,
+  },
+
+  status: {
+    padding: "4px 10px",
+    borderRadius: "5px",
+    color: Colors.textLight,
+    fontSize: "0.8rem",
+    marginTop: "10px",
+    display: "inline-block",
+  },
+
+  contact: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    marginTop: "6px",
+    color: Colors.textDark,
+    fontSize: "0.9rem",
+  },
+
+  iconSmall: {
+    color: Colors.primary,
+  },
+};

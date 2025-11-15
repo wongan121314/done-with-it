@@ -1,0 +1,18 @@
+// src/resources/icons.js
+import {
+  FaPhone,
+  FaEnvelope,
+  FaMapMarkerAlt,
+  FaTag,
+  FaBoxOpen,
+} from "react-icons/fa";
+
+const Icons = {
+  phone: FaPhone,
+  email: FaEnvelope,
+  location: FaMapMarkerAlt,
+  price: FaTag,
+  item: FaBoxOpen,
+};
+
+export default Icons;

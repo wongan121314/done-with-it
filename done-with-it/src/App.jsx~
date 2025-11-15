@@ -1,0 +1,70 @@
+import React from "react";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import ItemCard from "./components/ItemCard";
+
+export default function App() {
+  const items = [
+    {
+      title: "Old Laptop",
+      price: 120,
+      status: "Available",
+      image: "https://via.placeholder.com/500",
+      contact: "+1234567890",
+      email: "seller1@example.com",
+      address: "123 Main Street, City",
+    },
+    {
+      title: "Samsung Phone",
+      price: 80,
+      status: "Sold",
+      image: "https://via.placeholder.com/500",
+      contact: "+0987654321",
+      email: "seller2@example.com",
+      address: "456 Second Ave, Town",
+    },
+    {
+      title: "Used Bicycle",
+      price: 45,
+      status: "Available",
+      image: "https://via.placeholder.com/500",
+      contact: "+1122334455",
+      email: "seller3@example.com",
+      address: "789 Third Blvd, Village",
+    },
+  ];
+
+  // Render cards using helper function
+  const renderCards = () => {
+    const cards = [];
+    for (let i = 0; i < items.length; i++) {
+      cards.push(<ItemCard key={i} item={items[i]} />);
+    }
+    return cards;
+  };
+
+  return (
+    <div style={styles.appContainer}>
+      <Header />
+      <main style={styles.main}>{renderCards()}</main>
+      <Footer />
+    </div>
+  );
+}
+
+const styles = {
+  appContainer: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+  },
+  main: {
+    flex: 1,
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    padding: "20px",
+    gap: "20px",
+    backgroundColor: "#f5f5f5",
+  },
+};

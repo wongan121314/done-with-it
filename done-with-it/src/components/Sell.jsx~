@@ -1,0 +1,27 @@
+import React, { useState } from "react";
+import Login from "./Login";
+import Register from "./Register";
+import SellForm from "./SellForm";
+
+export default function Sell({ addItem }) {
+  const [showRegister, setShowRegister] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  // Conditional rendering
+  if (!loggedIn) {
+    return !showRegister ? (
+      <Login
+        switchToRegister={() => setShowRegister(true)}
+        onLogin={() => setLoggedIn(true)}
+      />
+    ) : (
+      <Register
+        switchToLogin={() => setShowRegister(false)}
+        onRegister={() => setLoggedIn(true)}
+      />
+    );
+  }
+
+  // Render SellForm only after login
+  return <SellForm addItem={addItem} />;
+}
