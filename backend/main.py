@@ -1,14 +1,26 @@
-from flask import Flask, request, jsonify
+# backend/main.py
+import os
+import time
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from db import get_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 from math import ceil
+from db import get_connection
 
 app = Flask(__name__)
 CORS(app)
 
-# ---------------- SELLER ROUTES ----------------
+# ---------------- UPLOADS ----------------
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+
+@app.route("/uploads/<filename>")
+def uploaded_file(filename):
+    return send_from_directory("uploads", filename)
+
+
+# ---------------- SELLER ROUTES ----------------
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.json
@@ -56,12 +68,10 @@ def login():
 
 
 # ---------------- ITEM ROUTES ----------------
-
 @app.route("/api/items", methods=["GET"])
 def get_items():
-    # Get query parameters
     category = request.args.get("category", "All")
-    sort_order = request.args.get("sort", "asc")  # 'asc' or 'desc'
+    sort_order = request.args.get("sort", "asc")
     page = int(request.args.get("page", 1))
     per_page = int(request.args.get("per_page", 10))
     search = request.args.get("search", "").strip()
@@ -69,24 +79,20 @@ def get_items():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Build base query
+    # Build query
     query = "SELECT * FROM items WHERE 1=1"
     params = []
 
-    # Filter by category
     if category != "All":
         query += " AND category = %s"
         params.append(category)
 
-    # Filter by search title
     if search:
         query += " AND title LIKE %s"
         params.append(f"%{search}%")
 
-    # Sorting
     query += " ORDER BY price " + ("ASC" if sort_order == "asc" else "DESC")
 
-    # Pagination
     offset = (page - 1) * per_page
     query += " LIMIT %s OFFSET %s"
     params.extend([per_page, offset])
@@ -97,11 +103,9 @@ def get_items():
     # Total count for pagination
     count_query = "SELECT COUNT(*) as total FROM items WHERE 1=1"
     count_params = []
-
     if category != "All":
         count_query += " AND category = %s"
         count_params.append(category)
-
     if search:
         count_query += " AND title LIKE %s"
         count_params.append(f"%{search}%")
@@ -123,54 +127,77 @@ def get_items():
 
 @app.route("/api/items", methods=["POST"])
 def add_item():
-    data = request.json
-    conn = get_connection()
-    cursor = conn.cursor()
+    seller_id = request.form.get("seller_id")
+    title = request.form.get("title")
+    price = request.form.get("price")
+    status = request.form.get("status")
+    category = request.form.get("category")
 
+    # Handle image
+    image = request.files.get("image")
+    filename = None
+    if image:
+        ext = os.path.splitext(image.filename)[1]
+        filename = f"{seller_id}_{int(time.time())}{ext}"
+        image.save(os.path.join(UPLOAD_FOLDER, filename))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
     cursor.execute("""
-        INSERT INTO items (title, price, status, category, image, contact, email, address, seller_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (
-        data.get("title"),
-        data.get("price"),
-        data.get("status"),
-        data.get("category"),
-        data.get("image"),
-        data.get("contact"),
-        data.get("email"),
-        data.get("address"),
-        data.get("seller_id")
-    ))
+        INSERT INTO items (title, price, status, category, image, seller_id)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """, (title, price, status, category, filename, seller_id))
     conn.commit()
+
+    cursor.execute("SELECT * FROM items WHERE id = LAST_INSERT_ID()")
+    new_item = cursor.fetchone()
+
     cursor.close()
     conn.close()
-    return jsonify({"message": "Item added"}), 201
+    return jsonify(new_item), 201
+
 
 @app.route("/api/items/<int:item_id>", methods=["PUT"])
 def update_item(item_id):
-    data = request.json
-    conn = get_connection()
-    cursor = conn.cursor()
+    # Use multipart/form-data if updating image
+    seller_id = request.form.get("seller_id")
+    title = request.form.get("title")
+    price = request.form.get("price")
+    status = request.form.get("status")
+    category = request.form.get("category")
 
-    cursor.execute("""
-        UPDATE items
-        SET title=%s, price=%s, status=%s, category=%s, image=%s, contact=%s, email=%s, address=%s
-        WHERE id=%s
-    """, (
-        data.get("title"),
-        data.get("price"),
-        data.get("status"),
-        data.get("category"),
-        data.get("image"),
-        data.get("contact"),
-        data.get("email"),
-        data.get("address"),
-        item_id
-    ))
+    # Handle image
+    image = request.files.get("image")
+    filename = None
+    if image:
+        ext = os.path.splitext(image.filename)[1]
+        filename = f"{seller_id}_{int(time.time())}{ext}"
+        image.save(os.path.join(UPLOAD_FOLDER, filename))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Only update image if provided
+    if filename:
+        cursor.execute("""
+            UPDATE items
+            SET title=%s, price=%s, status=%s, category=%s, image=%s
+            WHERE id=%s
+        """, (title, price, status, category, filename, item_id))
+    else:
+        cursor.execute("""
+            UPDATE items
+            SET title=%s, price=%s, status=%s, category=%s
+            WHERE id=%s
+        """, (title, price, status, category, item_id))
+
     conn.commit()
+    cursor.execute("SELECT * FROM items WHERE id=%s", (item_id,))
+    updated_item = cursor.fetchone()
+
     cursor.close()
     conn.close()
-    return jsonify({"message": "Item updated", "item": data})
+    return jsonify({"message": "Item updated", "item": updated_item})
 
 
 if __name__ == "__main__":

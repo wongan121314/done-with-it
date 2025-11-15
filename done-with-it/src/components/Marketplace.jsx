@@ -2,12 +2,11 @@ import React, { useEffect, useState } from "react";
 import ItemCard from "./ItemCard";
 
 const ITEMS_PER_PAGE = 10;
-const BACKEND_URL = "http://localhost:5000"; // Replace with backend IP
+const BACKEND_URL = "http://localhost:5000";
 
-export default function Marketplace() {
+export default function Marketplace({ onNewItem }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,6 +14,7 @@ export default function Marketplace() {
   const [allCategories, setAllCategories] = useState(["All"]);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch items
   useEffect(() => {
     const fetchItems = async () => {
       setLoading(true);
@@ -23,12 +23,12 @@ export default function Marketplace() {
           `${BACKEND_URL}/api/items?category=${categoryFilter}&sort=${sortOrder}&page=${currentPage}&per_page=${ITEMS_PER_PAGE}&search=${encodeURIComponent(searchQuery)}`
         );
         const data = await res.json();
-        setItems(data.items || []);
+        const fetchedItems = data.items || [];
+        setItems(fetchedItems);
         setTotalPages(data.total_pages || 1);
 
-        // Set categories dynamically
-        if (data.items.length > 0) {
-          const cats = ["All", ...new Set(data.items.map((i) => i.category))];
+        if (fetchedItems.length > 0) {
+          const cats = ["All", ...new Set(fetchedItems.map((i) => i.category))];
           setAllCategories(cats);
         }
       } catch (err) {
@@ -39,6 +39,14 @@ export default function Marketplace() {
 
     fetchItems();
   }, [categoryFilter, sortOrder, currentPage, searchQuery]);
+
+  // Add new item to top of list
+  const handleNewItem = (newItem) => {
+    setItems((prev) => [newItem, ...prev]);
+    if (!allCategories.includes(newItem.category)) {
+      setAllCategories((prev) => [...prev, newItem.category]);
+    }
+  };
 
   const handlePrev = () => setCurrentPage((p) => Math.max(p - 1, 1));
   const handleNext = () => setCurrentPage((p) => Math.min(p + 1, totalPages));
@@ -99,19 +107,19 @@ export default function Marketplace() {
 const styles = {
   filtersContainer: {
     display: "flex",
-    flexWrap: "wrap", // wrap on small screens
+    flexWrap: "wrap",
     gap: "12px",
     marginBottom: "16px",
   },
   input: {
-    flex: "1 1 200px", // grow/shrink, min width 200px
+    flex: "1 1 200px",
     padding: "8px",
     fontSize: "1rem",
     borderRadius: "6px",
     border: "1px solid #ccc",
   },
   select: {
-    flex: "1 1 150px", // grow/shrink, min width 150px
+    flex: "1 1 150px",
     padding: "8px",
     fontSize: "1rem",
     borderRadius: "6px",
@@ -121,7 +129,7 @@ const styles = {
     display: "flex",
     flexWrap: "wrap",
     gap: "16px",
-    justifyContent: "center", // center on smaller screens
+    justifyContent: "center",
   },
   pagination: {
     marginTop: "16px",

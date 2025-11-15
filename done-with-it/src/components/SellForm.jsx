@@ -1,60 +1,103 @@
-// src/components/SellForm.jsx
 import React, { useState } from "react";
 
-const BACKEND_URL = "http://localhost:5000";
+export default function SellForm({ seller, onNewItem }) {
+  const [title, setTitle] = useState("");
+  const [price, setPrice] = useState("");
+  const [status, setStatus] = useState("Available");
+  const [category, setCategory] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null); // For preview
 
-export default function SellForm({ item = null, sellerId, onSave, onClose }) {
-  const [title, setTitle] = useState(item?.title || "");
-  const [price, setPrice] = useState(item?.price || "");
-  const [status, setStatus] = useState(item?.status || "Available");
-  const [category, setCategory] = useState(item?.category || "");
-  const [image, setImage] = useState(item?.image || "");
-  const [contact, setContact] = useState(item?.contact || "");
-  const [email, setEmail] = useState(item?.email || "");
-  const [address, setAddress] = useState(item?.address || "");
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file)); // Preview
+    } else {
+      setImageFile(null);
+      setImagePreview(null);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = { title, price, status, category, image, contact, email, address, seller_id: sellerId };
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("price", price);
+    formData.append("status", status);
+    formData.append("category", category);
+    formData.append("seller_id", seller.id);
+    if (imageFile) formData.append("image", imageFile);
 
-    const url = item ? `${BACKEND_URL}/api/items/${item.id}` : `${BACKEND_URL}/api/items`;
-    const method = item ? "PUT" : "POST";
+    const res = await fetch("http://localhost:5000/api/items", {
+      method: "POST",
+      body: formData,
+    });
 
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        onSave && onSave({ ...payload, id: item?.id });
-      } else {
-        alert(data.message || "Error saving item");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error saving item");
+    if (res.ok) {
+      const newItem = await res.json();
+      onNewItem(newItem); // Update marketplace instantly
+
+      // Reset form and preview
+      setTitle("");
+      setPrice("");
+      setCategory("");
+      setStatus("Available");
+      setImageFile(null);
+      setImagePreview(null);
+    } else {
+      alert("Error adding item.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "400px" }}>
-      <input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-      <input type="number" placeholder="Price" value={price} onChange={(e) => setPrice(e.target.value)} required />
+    <form
+      onSubmit={handleSubmit}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        maxWidth: "400px",
+        margin: "0 auto",
+      }}
+    >
+      <input
+        type="text"
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+      />
+      <input
+        type="number"
+        placeholder="Price"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+        required
+      />
+      <input
+        type="text"
+        placeholder="Category"
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        required
+      />
       <select value={status} onChange={(e) => setStatus(e.target.value)}>
-        <option>Available</option>
-        <option>Sold</option>
+        <option value="Available">Available</option>
+        <option value="Sold">Sold</option>
       </select>
-      <input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
-      <input placeholder="Image URL" value={image} onChange={(e) => setImage(e.target.value)} />
-      <input placeholder="Contact" value={contact} onChange={(e) => setContact(e.target.value)} />
-      <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <input placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
-      <div style={{ display: "flex", gap: "10px" }}>
-        <button type="submit">{item ? "Update Item" : "Add Item"}</button>
-        {onClose && <button type="button" onClick={onClose}>Cancel</button>}
-      </div>
+      <input type="file" accept="image/*" onChange={handleImageChange} />
+
+      {/* Image preview */}
+      {imagePreview && (
+        <img
+          src={imagePreview}
+          alt="Preview"
+          style={{ width: "100%", maxHeight: "200px", objectFit: "cover", borderRadius: "8px" }}
+        />
+      )}
+
+      <button type="submit">Add Item</button>
     </form>
   );
 }

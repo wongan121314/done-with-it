@@ -3,15 +3,19 @@ import React, { useState } from "react";
 import Login from "./Login";
 import Register from "./Register";
 import SellForm from "./SellForm";
-import ViewItems from "./ViewItems";
+import Marketplace from "./Marketplace";
+import ViewItems from "./ViewItems"
 
 export default function Sell() {
   const [showRegister, setShowRegister] = useState(false);
   const [loggedInSeller, setLoggedInSeller] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
-  const [addingNew, setAddingNew] = useState(false);
+  const [newItems, setNewItems] = useState([]);
 
-  // Before login: show login/register
+  // Called by SellForm to add a new item
+  const handleNewItem = (item) => {
+    setNewItems((prev) => [item, ...prev]);
+  };
+
   if (!loggedInSeller) {
     return !showRegister ? (
       <Login
@@ -26,37 +30,12 @@ export default function Sell() {
     );
   }
 
-  // After login: show seller dashboard
   return (
     <div>
-      <h2>Welcome, {loggedInSeller.name}</h2>
-      <div style={{ marginBottom: "16px" }}>
-        <button onClick={() => setAddingNew(true)}>Add New Item</button>
-      </div>
+      {/* Sell Form */}
+      <SellForm seller={loggedInSeller} onNewItem={handleNewItem} />
 
-      {addingNew && (
-        <SellForm
-          sellerId={loggedInSeller.id}
-          onSave={() => setAddingNew(false)}
-          onClose={() => setAddingNew(false)}
-        />
-      )}
-
-      {!addingNew && !editingItem && (
-        <ViewItems
-          sellerId={loggedInSeller.id}
-          onEdit={(item) => setEditingItem(item)}
-        />
-      )}
-
-      {editingItem && (
-        <SellForm
-          item={editingItem}
-          sellerId={loggedInSeller.id}
-          onSave={() => setEditingItem(null)}
-          onClose={() => setEditingItem(null)}
-        />
-      )}
+ 
     </div>
   );
 }
