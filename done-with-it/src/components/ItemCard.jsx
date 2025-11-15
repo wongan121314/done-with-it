@@ -1,10 +1,17 @@
 import React from "react";
 import Icons from "../resources/icons";
+import Colors from "../resources/colors";
 
 const BACKEND_URL = "http://localhost:5000";
 
 export default function ItemCard({ item }) {
   const imageUrl = item.image ? `${BACKEND_URL}/uploads/${item.image}` : "https://picsum.photos/200";
+
+  const getStatusColor = (status) => {
+    if (status === "Available") return Colors.primary;
+    if (status === "Sold") return Colors.danger;
+    return Colors.gray;
+  };
 
   return (
     <div style={styles.card}>
@@ -13,7 +20,8 @@ export default function ItemCard({ item }) {
       <h3 style={styles.row}><Icons.item style={styles.icon} /> {item.title}</h3>
       <p style={styles.row}><Icons.price style={styles.icon} /> ${item.price}</p>
       <p style={styles.row}><Icons.item style={styles.icon} /> {item.category}</p>
-      <p style={styles.row}>{item.status}</p>
+      <p style={{ ...styles.row, color: getStatusColor(item.status), fontWeight: "bold" }}>{item.status}</p>
+
       {item.contact && <p style={styles.row}><Icons.phone style={styles.icon} /> {item.contact}</p>}
       {item.email && <p style={styles.row}><Icons.email style={styles.icon} /> {item.email}</p>}
       {item.address && <p style={styles.row}><Icons.location style={styles.icon} /> {item.address}</p>}
@@ -46,6 +54,6 @@ const styles = {
     fontSize: "0.9rem",
   },
   icon: {
-    color: "#4CAF50",
+    color: Colors.primary,
   },
 };
