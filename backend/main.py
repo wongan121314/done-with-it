@@ -1,25 +1,25 @@
 # backend/main.py
 import os
 import time
+import json
 from math import ceil
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
-from db import get_connection  # your existing db helper (mysql-connector)
+from db import get_connection
 
 app = Flask(__name__)
 CORS(app)
 
-# ---------------- UPLOADS ----------------
+# ---------------- UPLOAD FOLDER ----------------
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route("/uploads/<filename>")
+@app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-
-# ---------------- SELLER ROUTES ----------------
+# ---------------- AUTH ROUTES ----------------
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.json or {}
@@ -44,16 +44,12 @@ def register():
         conn.close()
         return jsonify({"message": "Email already exists"}), 400
 
-    cursor.execute(
-        """
+    cursor.execute("""
         INSERT INTO sellers (name, email, password, phone, location, address)
         VALUES (%s, %s, %s, %s, %s, %s)
-        """,
-        (name, email, hashed_pw, phone, location, address)
-    )
+    """, (name, email, hashed_pw, phone, location, address))
     conn.commit()
 
-    # Return created seller (without password)
     cursor.execute("SELECT id, name, email, phone, location, address FROM sellers WHERE email=%s", (email,))
     seller = cursor.fetchone()
 
@@ -75,27 +71,20 @@ def login():
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM sellers WHERE email=%s", (email,))
     seller = cursor.fetchone()
-    if not seller:
+
+    if not seller or not check_password_hash(seller["password"], password):
         cursor.close()
         conn.close()
-        return jsonify({"message": "User not found"}), 404
+        return jsonify({"message": "Invalid credentials"}), 400
 
-    if not check_password_hash(seller["password"], password):
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "Invalid credentials"}), 401
-
-    # remove password before returning
     seller.pop("password", None)
     cursor.close()
     conn.close()
     return jsonify(seller), 200
 
-
-# ---------------- ITEM ROUTES ----------------
+# ---------------- ITEMS ROUTES ----------------
 @app.route("/api/items", methods=["GET"])
 def get_items():
-    # supports optional seller_id, category, sort, page, per_page, search
     category = request.args.get("category", "All")
     sort_order = request.args.get("sort", "asc")
     page = int(request.args.get("page", 1))
@@ -106,7 +95,6 @@ def get_items():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # select items joined with seller contact fields
     query = """
         SELECT items.*, sellers.name AS seller_name, sellers.email AS seller_email,
                sellers.phone AS seller_phone, sellers.location AS seller_location,
@@ -115,6 +103,7 @@ def get_items():
         LEFT JOIN sellers ON items.seller_id = sellers.id
         WHERE 1=1
     """
+
     params = []
 
     if seller_id:
@@ -130,30 +119,30 @@ def get_items():
         params.append(f"%{search}%")
 
     query += " ORDER BY items.price " + ("ASC" if sort_order == "asc" else "DESC")
-
     offset = (page - 1) * per_page
+
     query += " LIMIT %s OFFSET %s"
     params.extend([per_page, offset])
 
     cursor.execute(query, params)
     items = cursor.fetchall()
 
-    # attach seller fields into item keys for convenience
+    # JSON decode images list
     for it in items:
-        it["seller_name"] = it.get("seller_name")
-        it["seller_email"] = it.get("seller_email")
-        it["seller_phone"] = it.get("seller_phone")
-        it["seller_location"] = it.get("seller_location")
-        it["seller_address"] = it.get("seller_address")
+        try:
+            it["images"] = json.loads(it.get("images") or "[]")
+        except:
+            it["images"] = []
 
     # total count
     count_query = "SELECT COUNT(*) as total FROM items WHERE 1=1"
     count_params = []
+
     if seller_id:
-        count_query += " AND seller_id = %s"
+        count_query += " AND seller_id=%s"
         count_params.append(seller_id)
     if category != "All":
-        count_query += " AND category = %s"
+        count_query += " AND category=%s"
         count_params.append(category)
     if search:
         count_query += " AND title LIKE %s"
@@ -167,52 +156,15 @@ def get_items():
 
     return jsonify({
         "items": items,
-        "total": total,
         "page": page,
         "per_page": per_page,
+        "total": total,
         "total_pages": ceil(total / per_page)
     })
 
 
 @app.route("/api/items", methods=["POST"])
 def add_item():
-    # expects multipart/form-data for image
-    seller_id = request.form.get("seller_id")
-    title = request.form.get("title")
-    price = request.form.get("price")
-    status = request.form.get("status")
-    category = request.form.get("category")
-    contact = request.form.get("contact")  # optional seller contact from frontend
-    email = request.form.get("email")
-    address = request.form.get("address")
-    location = request.form.get("location")
-
-    image = request.files.get("image")
-    filename = None
-    if image:
-        ext = os.path.splitext(image.filename)[1]
-        filename = f"{seller_id}_{int(time.time())}{ext}"
-        image.save(os.path.join(UPLOAD_FOLDER, filename))
-
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        INSERT INTO items (title, price, status, category, image, contact, email, address, seller_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """, (title, price, status, category, filename, contact, email, address, seller_id))
-    conn.commit()
-
-    cursor.execute("SELECT items.*, sellers.name AS seller_name, sellers.email AS seller_email, sellers.phone AS seller_phone, sellers.location AS seller_location, sellers.address AS seller_address FROM items LEFT JOIN sellers ON items.seller_id = sellers.id WHERE items.id = LAST_INSERT_ID()")
-    new_item = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-    return jsonify(new_item), 201
-
-
-@app.route("/api/items/<int:item_id>", methods=["PUT"])
-def update_item(item_id):
-    # expects multipart/form-data if updating image
     seller_id = request.form.get("seller_id")
     title = request.form.get("title")
     price = request.form.get("price")
@@ -221,38 +173,89 @@ def update_item(item_id):
     contact = request.form.get("contact")
     email = request.form.get("email")
     address = request.form.get("address")
-    location = request.form.get("location")
 
-    image = request.files.get("image")
-    filename = None
-    if image:
-        ext = os.path.splitext(image.filename)[1]
-        filename = f"{seller_id}_{int(time.time())}{ext}"
-        image.save(os.path.join(UPLOAD_FOLDER, filename))
+    # MULTIPLE IMAGES (max 5)
+    images = request.files.getlist("images")
+    saved_filenames = []
+
+    for img in images[:5]:
+        ext = os.path.splitext(img.filename)[1]
+        fname = f"{seller_id}_{int(time.time())}_{len(saved_filenames)}{ext}"
+        img.save(os.path.join(UPLOAD_FOLDER, fname))
+        saved_filenames.append(fname)
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    if filename:
-        cursor.execute("""
-            UPDATE items
-            SET title=%s, price=%s, status=%s, category=%s, image=%s, contact=%s, email=%s, address=%s
-            WHERE id=%s
-        """, (title, price, status, category, filename, contact, email, address, item_id))
-    else:
-        cursor.execute("""
-            UPDATE items
-            SET title=%s, price=%s, status=%s, category=%s, contact=%s, email=%s, address=%s
-            WHERE id=%s
-        """, (title, price, status, category, contact, email, address, item_id))
-
+    cursor.execute("""
+        INSERT INTO items (title, price, status, category, images, contact, email, address, seller_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (title, price, status, category, json.dumps(saved_filenames),
+          contact, email, address, seller_id))
     conn.commit()
-    cursor.execute("SELECT items.*, sellers.name AS seller_name, sellers.email AS seller_email, sellers.phone AS seller_phone, sellers.location AS seller_location, sellers.address AS seller_address FROM items LEFT JOIN sellers ON items.seller_id = sellers.id WHERE items.id = %s", (item_id,))
-    updated_item = cursor.fetchone()
+
+    cursor.execute("SELECT * FROM items WHERE id = LAST_INSERT_ID()")
+    item = cursor.fetchone()
+    item["images"] = saved_filenames
 
     cursor.close()
     conn.close()
-    return jsonify({"message": "Item updated", "item": updated_item}), 200
+    return jsonify(item), 201
+
+
+@app.route("/api/items/<int:item_id>", methods=["PUT"])
+def update_item(item_id):
+    seller_id = request.form.get("seller_id")
+    title = request.form.get("title")
+    price = request.form.get("price")
+    status = request.form.get("status")
+    category = request.form.get("category")
+    contact = request.form.get("contact")
+    email = request.form.get("email")
+    address = request.form.get("address")
+
+    # If new images uploaded → replace old list
+    new_images = request.files.getlist("images")
+    saved_files = []
+
+    if new_images:
+        for img in new_images[:5]:
+            ext = os.path.splitext(img.filename)[1]
+            fname = f"{seller_id}_{int(time.time())}_{len(saved_files)}{ext}"
+            img.save(os.path.join(UPLOAD_FOLDER, fname))
+            saved_files.append(fname)
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if saved_files:
+        cursor.execute("""
+            UPDATE items SET title=%s, price=%s, status=%s, category=%s,
+            images=%s, contact=%s, email=%s, address=%s
+            WHERE id=%s
+        """, (title, price, status, category, json.dumps(saved_files),
+              contact, email, address, item_id))
+    else:
+        cursor.execute("""
+            UPDATE items SET title=%s, price=%s, status=%s, category=%s,
+            contact=%s, email=%s, address=%s
+            WHERE id=%s
+        """, (title, price, status, category,
+              contact, email, address, item_id))
+
+    conn.commit()
+    cursor.execute("SELECT * FROM items WHERE id=%s", (item_id,))
+    item = cursor.fetchone()
+
+    try:
+        item["images"] = json.loads(item["images"] or "[]")
+    except:
+        item["images"] = []
+
+    cursor.close()
+    conn.close()
+
+    return jsonify(item), 200
 
 
 if __name__ == "__main__":
