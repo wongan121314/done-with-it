@@ -1,4 +1,3 @@
-// src/components/ViewItems.jsx
 import React, { useEffect, useState } from "react";
 import Icons from "../resources/icons";
 import EditItem from "./EditItem";
@@ -15,69 +14,36 @@ export default function ViewItems({ seller }) {
     setItems(data.items || []);
   };
 
-  useEffect(() => {
-    if (seller) loadItems();
-  }, [seller]);
+  useEffect(() => { if (seller) loadItems(); }, [seller]);
 
   if (editing) {
-    return (
-      <EditItem
-        item={editing}
-        seller={seller}
-        onCancel={() => setEditing(null)}
-        onSave={() => {
-          setEditing(null);
-          loadItems();
-        }}
-      />
-    );
+    return <EditItem item={editing} seller={seller} onCancel={() => setEditing(null)} onSave={() => { setEditing(null); loadItems(); }} />;
   }
 
   return (
     <div style={styles.container}>
       {items.length === 0 && <p>No items yet.</p>}
-      {items.map(item => {
-        const imageUrl = item.image
-          ? `${BACKEND_URL}/uploads/${item.image}`
-          : "https://picsum.photos/200";
-
-        return (
-          <div key={item.id} style={styles.card}>
-            <img src={imageUrl} alt={item.title} style={styles.image} />
-
-            <h3 style={styles.row}><Icons.item style={styles.icon} /> {item.title}</h3>
-            <p style={styles.row}><Icons.price style={styles.icon} /> ${item.price}</p>
-
-            <p style={styles.row}><Icons.item style={styles.icon} /> {item.category}</p>
-            <p style={styles.row}>{item.status}</p>
-
-            <button
-              style={styles.editBtn}
-              onClick={() => setEditing(item)}
-            >
-              Edit
-            </button>
-          </div>
-        );
-      })}
+      {items.map(item => (
+        <div key={item.id} style={styles.card}>
+          {item.images?.map((img, idx) => (
+            <img key={idx} src={`${BACKEND_URL}/uploads/${img}`} alt={`img-${idx}`} style={styles.image} />
+          ))}
+          <h3 style={styles.row}><Icons.item style={styles.icon} /> {item.title}</h3>
+          <p style={styles.row}><Icons.price style={styles.icon} /> ${item.price}</p>
+          <p style={styles.row}><Icons.item style={styles.icon} /> {item.category}</p>
+          <p style={styles.row}>{item.status}</p>
+          <button style={styles.editBtn} onClick={() => setEditing(item)}>Edit</button>
+        </div>
+      ))}
     </div>
   );
 }
 
 const styles = {
-  container: { display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" },
-  card: { width: "220px", border: "1px solid #ccc", borderRadius: "8px", padding: "8px", backgroundColor: "#fff" },
-  image: { width: "100%", height: "150px", objectFit: "cover", borderRadius: "6px" },
-  row: { display: "flex", alignItems: "center", gap: "6px", fontSize: "0.9rem" },
+  container: { display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center" },
+  card: { width: 220, border: "1px solid #ccc", borderRadius: 8, padding: 8, backgroundColor: "#fff" },
+  image: { width: "100%", height: 150, objectFit: "cover", borderRadius: 6, marginBottom: 4 },
+  row: { display: "flex", alignItems: "center", gap: 6, fontSize: "0.9rem" },
   icon: { color: "#4CAF50" },
-
-  editBtn: {
-    marginTop: "8px",
-    padding: "6px 10px",
-    borderRadius: "6px",
-    border: "none",
-    backgroundColor: "#FF9800",
-    color: "white",
-    cursor: "pointer",
-  },
+  editBtn: { marginTop: 8, padding: "6px 10px", borderRadius: 6, border: "none", backgroundColor: "#FF9800", color: "white", cursor: "pointer" },
 };
