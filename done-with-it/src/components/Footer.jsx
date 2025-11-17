@@ -6,9 +6,9 @@ export default function Footer() {
     <footer style={styles.footer}>
       <p>© 2025 DoneWithIt. All rights reserved.</p>
       <div style={styles.links}>
-        <a href="#" style={styles.link}>Marketplace</a>
-        <a href="#" style={styles.link}>Sell</a>
-        <a href="#" style={styles.link}>About</a>
+        <a href="/report.html">Report an Issue</a>
+
+
       </div>
     </footer>
   );
