@@ -23,7 +23,7 @@ function ReportPage() {
     }
 
     try {
-	const res = await fetch("{strings.report_url}/api/report", {
+	const res = await fetch(`http://${strings.report_url}/api/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, message }),

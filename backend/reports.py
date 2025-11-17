@@ -1,3 +1,4 @@
+# backend/reports.py
 from flask import Flask, request, jsonify
 import mysql.connector
 from flask_cors import CORS
@@ -16,6 +17,25 @@ db_config = {
 def get_db_connection():
     conn = mysql.connector.connect(**db_config)
     return conn
+
+# Ensure the reports table exists
+def create_reports_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reports (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+create_reports_table()  # create table at startup
 
 # Endpoint to submit report
 @app.route("/api/report", methods=["POST"])
