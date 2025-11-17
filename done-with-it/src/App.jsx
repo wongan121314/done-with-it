@@ -4,6 +4,8 @@ import Footer from "./components/Footer";
 import Marketplace from "./components/Marketplace";
 import Sell from "./components/Sell";
 import About from "./components/About";
+import InstallPrompt from "./components/InstallPrompt";
+
 
 export default function App() {
   // State to track which "page" to show
@@ -19,7 +21,7 @@ export default function App() {
         {currentPage === "sell" && <Sell />}
         {currentPage === "about" && <About />}
       </main>
-
+     <InstallPrompt />
       <Footer />
     </div>
   );
