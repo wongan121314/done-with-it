@@ -28,7 +28,7 @@ const styles = {
     padding: "16px 24px",
     backgroundColor: Colors.primary,
     color: Colors.textLight,
-    flexWrap: "wrap",
+      flexWrap: "wrap",
   },
   logo: {
     fontSize: "1.5rem",

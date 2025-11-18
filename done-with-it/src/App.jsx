@@ -13,8 +13,9 @@ export default function App() {
 
   return (
     <div style={styles.appContainer}>
-      {/* Pass the state setter to Header so clicking links changes page */}
-      <Header setCurrentPage={setCurrentPage} />
+	{/* Pass the state setter to Header so clicking links changes page */}
+	<div style={styles.header}>
+	<Header style={styles.header} setCurrentPage={setCurrentPage} /></div>
 
       <main style={styles.main}>
         {currentPage === "marketplace" && <Marketplace />}
@@ -28,10 +29,15 @@ export default function App() {
 }
 
 const styles = {
+    header:{
+	position: "sticky",
+	top: 0,
+	zIndex: 1000,
+    },
   appContainer: {
     minHeight: "100vh",
     display: "flex",
-    flexDirection: "column",
+      flexDirection: "column",
   },
   main: {
     flex: 1,

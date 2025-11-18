@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
 import ItemCard from "./ItemCard";
+import Colors from "../resources/colors";
+import Strings from "../resources/strings";
+
+
+
 
 const ITEMS_PER_PAGE = 10;
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = Strings.backend_url;
 
 export default function Marketplace({ onNewItem }) {
   const [items, setItems] = useState([]);
@@ -53,7 +58,8 @@ export default function Marketplace({ onNewItem }) {
 
   // Manual search triggered by button
   const handleSearch = () => {
-    setCurrentPage(1); // triggers fetch via useEffect
+    setCurrentPage(1); // optional: reset pagination
+    fetchItems();       // manually fetch items with current searchQuery
   };
 
   if (loading) return <p>Loading marketplace items...</p>;
@@ -166,7 +172,7 @@ const styles = {
     height: "100%",
     border: "none",
     borderRadius: "15px 20px 20px 0",
-    backgroundColor: "#ff6a00",
+    backgroundColor: Colors.primary,
     color: "#fff",
     padding: "0 16px",
     fontSize: "1rem",
