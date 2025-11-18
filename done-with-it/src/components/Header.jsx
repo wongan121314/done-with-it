@@ -1,12 +1,16 @@
 import React from "react";
 import Colors from "../resources/colors";
 
+
 export default function Header({ setCurrentPage }) {
   return (
-    <header style={styles.header}>
-      <h1 style={styles.logo}>DoneWithIt</h1>
+      <header style={styles.header}>
+	  	
+	      <img src={"./public/icon.png"} style={styles.logoIcon} />
+		 <h1 style={styles.logo}> DoneWithIt</h1>
+	  
       <nav style={styles.nav}>
-        <button style={styles.link} onClick={() => setCurrentPage("marketplace")}>
+          <button style={styles.link}  onClick={() => setCurrentPage("marketplace")}>
           Marketplace
         </button>
         <button style={styles.link} onClick={() => setCurrentPage("sell")}>
@@ -31,14 +35,33 @@ const styles = {
       flexWrap: "wrap",
   },
   logo: {
-    fontSize: "1.5rem",
+    fontSize: "1.6rem",
     fontWeight: "bold",
-    margin: "0",
+      margin: "auto",
+      height: "auto",
+      paddingTop : "5px",
+      textAlign: "center",
   },
+    logoIcon:{
+	width: "50px",
+	height: "auto",
+	marginRight: "5px",
+	marginTop: "16px",
+	position : "absolute",
+	top: "-19%",
+	right: "1%",
+	
+    },
   nav: {
     display: "flex",
     gap: "20px",
-    flexWrap: "wrap",
+      flexWrap: "wrap",
+      marginTop: "10px",
+      margin: "auto",
+      borderBottom: "1px solid #475c42",
+      borderRadius: "9px",
+      padding: "5px",
+      boxShadow: "1px 1px 1px green"
   },
   link: {
     background: "none",
@@ -46,6 +69,6 @@ const styles = {
     color: Colors.textLight,
     fontWeight: "500",
     fontSize: "1rem",
-    cursor: "pointer",
+      cursor: "pointer",
   },
 };
