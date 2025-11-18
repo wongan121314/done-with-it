@@ -11,8 +11,8 @@ export default defineConfig({
       srcDir: 'src',                  // directory where your SW lives
       filename: 'service-worker.js',  // SW output name
       manifest: {
-        name: 'TurnWithIt',
-        short_name: 'TurnWithIt',
+        name: 'done With It market place',
+        short_name: 'done-with-it',
         description: 'Marketplace to buy and sell items',
         start_url: '/',
         display: 'standalone',

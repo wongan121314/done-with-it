@@ -41,7 +41,7 @@ export default function InstallPrompt() {
         zIndex: 9999,
       }}
     >
-      Install TurnWithIt
+	Install done-with-it
     </button>
   );
 }
