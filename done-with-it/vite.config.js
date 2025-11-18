@@ -6,8 +6,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',  // SW updates automatically
-      strategies: 'generateSW',    // auto-generate SW
+      registerType: 'autoUpdate',
+      strategies: 'injectManifest',   // ← use your custom SW
+      srcDir: 'src',                  // directory where your SW lives
+      filename: 'service-worker.js',  // SW output name
       manifest: {
         name: 'TurnWithIt',
         short_name: 'TurnWithIt',
@@ -22,33 +24,18 @@ export default defineConfig({
         ],
       },
       workbox: {
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/localhost:5002\/api\/.*$/, // your backend API
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 5,
-              expiration: { maxEntries: 50, maxAgeSeconds: 300 } // 5 minutes
-            },
-          },
-          {
-            urlPattern: /^\/.*\.(js|css|png|svg|jpg|jpeg|gif|woff2?)$/i, // static assets
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'assets-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 86400 } // 1 day
-            },
-          },
-        ],
+        globPatterns: ['**/*.{js,css,html,png,svg,ico}'], // only cache essential assets
       },
     }),
   ],
+  build: {
+    minify: 'esbuild', // optional, Vite build is faster and lighter
+  },
   server: {
     host: '0.0.0.0',
     port: 8000,
     strictPort: true,
-      allowedHosts: ['bore.pub', 'rush-ship-chronicle-only.trycloudflare.com','localhost'],
+    allowedHosts: ['bore.pub', 'rush-ship-chronicle-only.trycloudflare.com', 'localhost'],
     hmr: { protocol: 'ws', host: 'localhost' },
   },
 });
