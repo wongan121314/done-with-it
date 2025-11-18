@@ -14,30 +14,32 @@ export default function Marketplace({ onNewItem }) {
   const [allCategories, setAllCategories] = useState(["All"]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `${BACKEND_URL}/api/items?category=${categoryFilter}&sort=${sortOrder}&page=${currentPage}&per_page=${ITEMS_PER_PAGE}&search=${encodeURIComponent(searchQuery)}`
-        );
-        const data = await res.json();
-        const fetchedItems = data.items || [];
-        setItems(fetchedItems);
-        setTotalPages(data.total_pages || 1);
+  // Fetch items function
+  const fetchItems = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${BACKEND_URL}/api/items?category=${categoryFilter}&sort=${sortOrder}&page=${currentPage}&per_page=${ITEMS_PER_PAGE}&search=${encodeURIComponent(searchQuery)}`
+      );
+      const data = await res.json();
+      const fetchedItems = data.items || [];
+      setItems(fetchedItems);
+      setTotalPages(data.total_pages || 1);
 
-        if (fetchedItems.length > 0) {
-          const cats = ["All", ...new Set(fetchedItems.map((i) => i.category))];
-          setAllCategories(cats);
-        }
-      } catch (err) {
-        console.error("Error fetching items:", err);
+      if (fetchedItems.length > 0) {
+        const cats = ["All", ...new Set(fetchedItems.map((i) => i.category))];
+        setAllCategories(cats);
       }
-      setLoading(false);
-    };
+    } catch (err) {
+      console.error("Error fetching items:", err);
+    }
+    setLoading(false);
+  };
 
+  // Fetch items on category, sort, or page change
+  useEffect(() => {
     fetchItems();
-  }, [categoryFilter, sortOrder, currentPage, searchQuery]);
+  }, [categoryFilter, sortOrder, currentPage]); // searchQuery removed
 
   const handleNewItem = (newItem) => {
     setItems((prev) => [newItem, ...prev]);
@@ -48,7 +50,11 @@ export default function Marketplace({ onNewItem }) {
 
   const handlePrev = () => setCurrentPage((p) => Math.max(p - 1, 1));
   const handleNext = () => setCurrentPage((p) => Math.min(p + 1, totalPages));
-  const handleSearch = () => setCurrentPage(1);
+
+  // Manual search triggered by button
+  const handleSearch = () => {
+    setCurrentPage(1); // triggers fetch via useEffect
+  };
 
   if (loading) return <p>Loading marketplace items...</p>;
 
@@ -70,7 +76,7 @@ export default function Marketplace({ onNewItem }) {
             type="text"
             placeholder="Search by title..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)} // only updates state
             style={styles.searchInput}
           />
 
@@ -144,15 +150,13 @@ const styles = {
   },
 
   searchInput: {
-      width: "60%", // space for button
+      width: "60%",
     fontSize: "20px",
     borderRadius: "20px",
     border: "1px solid #43F554",
     boxShadow: "2px 2px 2px gray",
-      height: "30px",
-      paddingLeft: "11%",
-
-      
+    height: "30px",
+    paddingLeft: "11%",
   },
 
   searchButton: {
@@ -166,8 +170,8 @@ const styles = {
     color: "#fff",
     padding: "0 16px",
     fontSize: "1rem",
-      cursor: "pointer",
-      margin: "0",
+    cursor: "pointer",
+    margin: "0",
   },
 
   select: {
