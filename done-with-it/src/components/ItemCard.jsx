@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Icons from "../resources/icons";
 import Colors from "../resources/colors";
+import Strings from "../resources/strings";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = Strings.backend_url;
 
 export default function ItemCard({ item }) {
   const [showPreview, setShowPreview] = useState(false);

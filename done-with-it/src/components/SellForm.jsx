@@ -1,7 +1,11 @@
 // src/components/SellForm.jsx
 import React, { useState } from "react";
-import Icons from "../resources/icons";                                 
-const BACKEND_URL = "http://localhost:5000";
+import Icons from "../resources/icons";
+import Strings from "../resources/strings";
+
+
+const BACKEND_URL = Strings.backend_url;
+
 
 const CATEGORIES = [
   "Electronics",

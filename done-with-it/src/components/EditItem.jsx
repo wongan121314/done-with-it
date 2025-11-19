@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-const BACKEND_URL = "http://localhost:5000";
+import Strings from "../resources/strings";
+
+
+
+const BACKEND_URL = Strings.backend_url;
 
 export default function EditItem({ item, seller, onCancel, onSave }) {
   const [title, setTitle] = useState(item.title);

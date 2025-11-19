@@ -1,6 +1,10 @@
 // src/components/Login.jsx
 import React, { useState } from "react";
 import Colors from "../resources/colors";
+import Strings from "../resources/strings"
+
+
+const backend_uri = Strings.backend_url;
 
 export default function Login({ switchToRegister, onLogin }) {
   const [email, setEmail] = useState("");
@@ -10,7 +14,7 @@ export default function Login({ switchToRegister, onLogin }) {
   const handleLogin = async () => {
     setError("");
     try {
-      const res = await fetch("http://localhost:5000/api/login", {
+	const res = await fetch(`${backend_uri}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

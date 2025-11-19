@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Icons from "../resources/icons";
 import EditItem from "./EditItem";
+import Strings from "../resources/strings";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = Strings.backend_url;
 
 export default function ViewItems({ seller }) {
   const [items, setItems] = useState([]);

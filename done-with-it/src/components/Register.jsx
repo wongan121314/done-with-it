@@ -1,6 +1,10 @@
 // src/components/Register.jsx
 import React, { useState } from "react";
 import Colors from "../resources/colors";
+import Strings from "../resources/strings";
+
+
+const backend_uri = Strings.backend_url;
 
 export default function Register({ switchToLogin, onRegister }) {
   const [form, setForm] = useState({
@@ -16,7 +20,7 @@ export default function Register({ switchToLogin, onRegister }) {
   const handleRegister = async () => {
     setError("");
     try {
-      const res = await fetch("http://localhost:5000/api/register", {
+	const res = await fetch(`${backend_uri}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
