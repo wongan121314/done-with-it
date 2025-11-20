@@ -6,7 +6,7 @@ export default function Header({ setCurrentPage }) {
   return (
       <header style={styles.header}>
 	  	
-	      <img src={"./public/icon.png"} style={styles.logoIcon} />
+	      <img src={"/icon.png"} style={styles.logoIcon} />
 		 <h1 style={styles.logo}> DoneWithIt</h1>
 	  
       <nav style={styles.nav}>

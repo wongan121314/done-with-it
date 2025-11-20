@@ -4,19 +4,24 @@ import time
 import json
 from math import ceil
 from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin # <-- IMPORT cross_origin
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_connection
 
 app = Flask(__name__)
-CORS(app)
+# Apply CORS broadly to allow cross-origin requests from your Netlify frontend
+# If you know your Netlify domain (e.g., https://done-with-them.netlify.app), 
+# replace "*" with that domain for better security.
+CORS(app, resources={r"/*": {"origins": "*"}}) 
 
 # ---------------- UPLOAD FOLDER ----------------
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route("/uploads/<path:filename>")
+@cross_origin() # <-- FIX: Explicitly applies CORS header to image responses
 def uploaded_file(filename):
+    """Serves files from the UPLOAD_FOLDER."""
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 # ---------------- AUTH ROUTES ----------------
