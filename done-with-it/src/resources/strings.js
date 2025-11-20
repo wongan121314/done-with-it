@@ -6,7 +6,7 @@ const Strings = {
   status_reserved: "Reserved",
   price: "Price",
     report_url: "localhost:5001",
-    backend_url: "http://sampleweb1213.pagekite.me"
+    backend_url: "https://dwi-server.loca.lt"
 };
 
 export default Strings;
