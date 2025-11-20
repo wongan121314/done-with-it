@@ -6,7 +6,7 @@ const Strings = {
   status_reserved: "Reserved",
   price: "Price",
     report_url: "localhost:5001",
-    backend_url: "https://dwi-server.loca.lt"
+    backend_url: "https://added-indices-announcement-heard.trycloudflare.com"
 };
 
 export default Strings;

@@ -35,7 +35,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 8000,
     strictPort: true,
-    allowedHosts: ['bore.pub', 'joel-charms-governments-packard.trycloudflare.com', 'localhost'],
+    allowedHosts: "all",
     hmr: { protocol: 'ws', host: 'localhost' },
   },
 });
